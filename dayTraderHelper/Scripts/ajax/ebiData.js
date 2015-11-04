@@ -1,10 +1,12 @@
 ﻿
-
+var firstFeedDate;
 var firstRssDownload = true;
 var firstFeedTitle;
 var newFeedTitle;
 var newFeedLink;
 var newFeedDate;
+var hotStocks = ["vivid", "11 bit", "a"];
+var hasFound;
 
 setInterval(function () {
 
@@ -14,23 +16,19 @@ setInterval(function () {
         .success(function (data) {
             //alert("udalo sie  " + data.responseData.feed.entries[1].title);
             if (firstRssDownload) {
-                createRssList(data);
+                addComponentsToPage(data,firstRssDownload);
                 firstFeedTitle = data.responseData.feed.entries[0].title;
                 console.log(firstFeedTitle);
                 firstRssDownload = false;
             } else {
                 newFeedTitle = data.responseData.feed.entries[0].title;
                 if (firstFeedTitle != newFeedTitle) {
-                    alert("nowy feed");
-                    if (checkNewTitle(data, newFeedTitle)) {
-                        newFeedLink = data.responseData.feed.entries[0].link;
-                        newFeedTitle = data.responseData.feed.entries[0].publishedDate;
-                        $("#rssList").append("<a href='" + newFeedLink + " 'class='list-group-item' target='_blank'>"
-                            + "<span class='label label-danger'>" + item.publishedDate + "</span>"
-                            + "<span class='group-item-text info-title'>" + newFeedTitle + "</span>"
-                            + "</a>");
+                    console.log("nowy feed");
+                    if (checkNewTitlehasHotStocks(data, newFeedTitle)) {
+                        addComponentsToPage(data, firstRssDownload);
+                    } else {
+                        firstFeedTitle = newFeedTitle;
                     }
-                    firstFeedTitle = newFeedTitle;
                 }
             }      
         })
@@ -40,23 +38,47 @@ setInterval(function () {
 
 }, 5000);
 
-
-function createRssList(data) {
-    $.each(data.responseData.feed.entries, function (index, item) {
-        $("#rssList").append("<a href='" + item.link + " 'class='list-group-item' target='blank'>"
-            + "<span class='label label-danger'>" + item.publishedDate + "</span>"
-            + "<span class='group-item-text info-title'>" + item.title + "</span>"
-            + "</a>");
+function checkNewTitlehasHotStocks(data, newFeedTitle) {
+    $.each(hotStocks, function (index, item) {
+        if (newFeedTitle.toLowerCase().indexOf(item) >= 0) {
+            return hasFound = true;
+        } else {
+            hasFound = false;
+        }
     });
-
+    console.log(hasFound);
+    return hasFound;
 };
 
-function checkNewTitle(data, newFeedTitle) {
-    alert(newFeedTitle);
-    if (newFeedTitle.toLowerCase().indexOf("a") >= 0) {
-        alert("wiadomosc zawiera szukany klucz a");
-        return true;
+function formatDate(itemDate) {
+    
+    itemDate = new Date(itemDate);   
+    var monthDay = itemDate.getDate();
+    var hours = itemDate.getHours();
+    var minutes = itemDate.getMinutes();
+    var seconds = itemDate.getSeconds();
+    var pubDate = hours + ":" + minutes+" " + seconds +" sekund";
+    console.log(pubDate);
+
+    return pubDate;
+};
+
+function addComponentsToPage(data, firstRssDownload) {
+    if (firstRssDownload) {
+        $.each(data.responseData.feed.entries, function (index, item) {
+            $("#rssList").append("<a href='" + item.link + " 'class='list-group-item' target='blank'>"
+                + "<span class='label label-danger'>" + formatDate(item.publishedDate) + "</span>"
+                + "<span class='group-item-text info-title'>" + item.title + "</span>"
+                + "</a>");
+        });
+    } else {
+        newFeedLink = data.responseData.feed.entries[0].link;
+        newFeedTitle = data.responseData.feed.entries[0].title;
+        newFeedDate = formatDate(data.responseData.feed.entries[0].publishedDate);
+
+        $("#rssList").append("<a href='" + newFeedLink + " 'class='list-group-item' target='_blank'>"
+         + "<span class='label label-danger'>" + newFeedDate + "</span>"
+         + "<span class='group-item-text info-title'>" + newFeedTitle + "</span>"
+         + "</a>");
     }
-    return false;
-};
-
+}
