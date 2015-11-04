@@ -8,6 +8,8 @@ var newFeedDate;
 var hotStocks = ["vivid", "11 bit", "a"];
 var hasFound;
 
+
+
 setInterval(function () {
 
     var url = "http://biznes.pap.pl/pl/rss/6614?nocache="+ (new Date).getTime();
@@ -20,10 +22,12 @@ setInterval(function () {
                 firstFeedTitle = data.responseData.feed.entries[0].title;
                 console.log(firstFeedTitle);
                 firstRssDownload = false;
+                $("#alarmSound")[0].play();
             } else {
                 newFeedTitle = data.responseData.feed.entries[0].title;
                 if (firstFeedTitle != newFeedTitle) {
                     console.log("nowy feed");
+                    $("#alarmSound").play();
                     if (checkNewTitlehasHotStocks(data, newFeedTitle)) {
                         addComponentsToPage(data, firstRssDownload);
                     } else {
