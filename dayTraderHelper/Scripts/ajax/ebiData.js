@@ -2,9 +2,9 @@
 var firstFeedDate;
 var firstRssDownload = true;
 var firstFeedTitle;
-var newFeedTitle;
-var newFeedLink;
-var newFeedDate;
+var FeedTitle;
+var FeedLink;
+var FeedDate;
 var hotStocks = ["vivid", "11 bit", "a"];
 var hasFound;
 
@@ -12,24 +12,30 @@ var hasFound;
 
 setInterval(function () {
 
-    var url = "http://biznes.pap.pl/pl/rss/6614?nocache="+ (new Date).getTime();
+    var time = (new Date).getTime();
+
+    var url = "http://biznes.pap.pl/pl/rss/6614?nocache=" + time;
+
 
     $.getJSON(document.location.protocol + "//ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=1000&callback=?&q=" + encodeURIComponent(url))
         .success(function (data) {
             //alert("udalo sie  " + data.responseData.feed.entries[1].title);
             if (firstRssDownload) {
-                addComponentsToPage(data,firstRssDownload);
+                console.log(firstRssDownload);
+                addComponentsToPage(data,true);
                 firstFeedTitle = data.responseData.feed.entries[0].title;
                 console.log(firstFeedTitle);
                 firstRssDownload = false;
+                console.log(firstRssDownload);
                 $("#alarmSound")[0].play();
             } else {
                 newFeedTitle = data.responseData.feed.entries[0].title;
                 if (firstFeedTitle != newFeedTitle) {
                     console.log("nowy feed");
-                    $("#alarmSound").play();
+                    $("#alarmSound")[0].play();
                     if (checkNewTitlehasHotStocks(data, newFeedTitle)) {
-                        addComponentsToPage(data, firstRssDownload);
+                        addComponentsToPage(data, false);
+                        firstFeedTitle = newFeedTitle;
                     } else {
                         firstFeedTitle = newFeedTitle;
                     }
@@ -40,7 +46,7 @@ setInterval(function () {
             alert("no to mamy problem, nie nawiazalem polaczenia");
         });
 
-}, 5000);
+}, 3000);
 
 function checkNewTitlehasHotStocks(data, newFeedTitle) {
     $.each(hotStocks, function (index, item) {
@@ -67,8 +73,8 @@ function formatDate(itemDate) {
     return pubDate;
 };
 
-function addComponentsToPage(data, firstRssDownload) {
-    if (firstRssDownload) {
+function addComponentsToPage(data, firstdl) {
+    if (firstdl) {
         $.each(data.responseData.feed.entries, function (index, item) {
             $("#rssList").append("<a href='" + item.link + " 'class='list-group-item' target='blank'>"
                 + "<span class='label label-danger'>" + formatDate(item.publishedDate) + "</span>"
@@ -76,13 +82,13 @@ function addComponentsToPage(data, firstRssDownload) {
                 + "</a>");
         });
     } else {
-        newFeedLink = data.responseData.feed.entries[0].link;
-        newFeedTitle = data.responseData.feed.entries[0].title;
-        newFeedDate = formatDate(data.responseData.feed.entries[0].publishedDate);
+        FeedLink = data.responseData.feed.entries[0].link;
+        FeedTitle = data.responseData.feed.entries[0].title;
+        FeedDate = formatDate(data.responseData.feed.entries[0].publishedDate);
 
-        $("#rssList").append("<a href='" + newFeedLink + " 'class='list-group-item' target='_blank'>"
-         + "<span class='label label-danger'>" + newFeedDate + "</span>"
-         + "<span class='group-item-text info-title'>" + newFeedTitle + "</span>"
+        $("#rssList").append("<a href='" + FeedLink + " 'class='list-group-item' target='_blank'>"
+         + "<span class='label label-danger'>" + FeedDate + "</span>"
+         + "<span class='group-item-text info-title'>" + FeedTitle + "</span>"
          + "</a>");
     }
-}
+};
